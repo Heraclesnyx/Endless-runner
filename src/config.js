@@ -1,0 +1,1 @@
+// Configuration global du jeu
