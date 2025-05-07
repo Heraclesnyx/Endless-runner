@@ -6,8 +6,9 @@ body {
   height: 100%;
   justify-content: center; /* Centre horizontalement */
   align-items: center; /* Centre verticalement */
-  background-color: #87ceeb; /*Couleur de fond (facultatif, ici un bleu ciel)*/
+  background-color: #87ceed; /*Couleur de fond (facultatif, ici un bleu ciel)#87ceed*/
 }
-canvas {
+#canvas {
   display: block;
+  border: 5px solid black;
 }
