@@ -8,6 +8,7 @@ export default class PreloadScene extends Phaser.Scene {
 
   preload() {
     this.load.image("paysage", "../../assets/paysage.png");
+    this.load.image("ground", "../../assets/sol.png");
   }
 
   create() {
