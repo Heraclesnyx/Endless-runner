@@ -9,6 +9,10 @@ export default class PreloadScene extends Phaser.Scene {
   preload() {
     this.load.image("paysage", "../../assets/paysage.png");
     this.load.image("ground", "../../assets/sol.png");
+    this.load.spritesheet("ninja", "../../assets/perso.png", {
+      frameWidth: 47,
+      frameHeight: 59,
+    });
   }
 
   create() {

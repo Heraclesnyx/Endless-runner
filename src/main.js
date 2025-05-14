@@ -16,6 +16,9 @@ const config = {
     },
   },
   scene: [PreloadScene, GameScene, GameOverScene],
+  input: {
+    keyboard: true,
+  },
 };
 
 const game = new Phaser.Game(config);
