@@ -9,15 +9,14 @@ export default class GameScene extends Phaser.Scene {
 
   create() {
     this.add.image(400, 300, "paysage");
-    // this.ground = this.physics.add.staticGroup();
 
-    // Sol visuel (tileSprite = image répétée)
+    // Sol visuel (tileSprite = image répétée et n'a pas de corps physique)
     this.ground = this.add
       .tileSprite(0, 600, 800, 64, "ground")
-      .setOrigin(0, 1)
-      .setDepth(0); // Arrière-plan
+      .setOrigin(0, 1);
+    // .setDepth(0); // Arrière-plan
 
-    //Sol physique invisible
+    //Sol physique invisible, obliger de le créer pour gérer la collision avec mon tileSprite)
     this.groundCollider = this.physics.add
       .staticSprite(400, 600, "ground")
       .setOrigin(0.5, 1)
