@@ -17,6 +17,21 @@ export default class PreloadScene extends Phaser.Scene {
       frameWidth: 90,
       frameHeight: 120,
     });
+    this.load.spritesheet("dead", "../../assets/dead.png", {
+      frameWidth: 56,
+      frameHeight: 58,
+    });
+
+    //On stocke nos différents obstacle dans un tableau pour mieux travailler avec
+    const obstacles = [
+      { key: "vertical", path: "../../assets/vertical.png" },
+      { key: "horizontal", path: "../../assets/vertical2.png" },
+      { key: "platform", path: "../../assets/platform.png" },
+    ];
+
+    obstacles.forEach((obstacle) => {
+      this.load.image(obstacle.key, obstacle.path);
+    });
   }
 
   create() {

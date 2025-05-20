@@ -96,10 +96,5 @@ export default class GameScene extends Phaser.Scene {
     if (this.isRunning) {
       this.ground.tilePositionX += 3;
     }
-
-    // } else {
-    //   this.player.anims.stop();
-    //   this.player.setVelocity(0);
-    // }
   }
 }
