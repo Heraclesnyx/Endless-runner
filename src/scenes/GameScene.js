@@ -13,8 +13,8 @@ export default class GameScene extends Phaser.Scene {
     // Sol visuel (tileSprite = image répétée et n'a pas de corps physique)
     this.ground = this.add
       .tileSprite(0, 600, 800, 64, "ground")
-      .setOrigin(0, 1);
-    // .setDepth(0); // Arrière-plan
+      .setOrigin(0, 1)
+      .setDepth(0); // Arrière-plan
 
     //Sol physique invisible, obliger de le créer pour gérer la collision avec mon tileSprite)
     this.groundCollider = this.physics.add
@@ -51,11 +51,11 @@ export default class GameScene extends Phaser.Scene {
     if (this.cursors.right.isDown && !this.isRunning) {
       this.isRunning = true;
       this.player.anims.play("run", true);
-      this.player.setVelocity(160);
+      this.player.setVelocityX(0);
     }
 
     if (this.isRunning) {
-      this.ground.tilePosition += 2;
+      this.ground.tilePositionX += 2;
     }
     // } else {
     //   this.player.anims.stop();

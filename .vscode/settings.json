@@ -1,4 +1,13 @@
 {
-  "cSpell.words": ["Activer", "partie", "paysage", "perso"],
+  "cSpell.words": [
+    "Activer",
+    "Arrière",
+    "hitbox",
+    "partie",
+    "paysage",
+    "perso",
+    "répétée",
+    "visuel"
+  ],
   "liveServer.settings.port": 5501
 }
