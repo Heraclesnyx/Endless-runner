@@ -105,14 +105,16 @@ export default class GameScene extends Phaser.Scene {
           obstacle.setVelocity(0);
         });
 
-        //Arrêt du sol
-        this.ground.tilePositionX = this.ground.tilePositionX; //On fixe la position
-        this.obstacleTimerStarted = false; // Pour éviter le spawn
+        // Pour éviter le spawn
+        this.obstacleTimerStarted = false;
 
         //Stopper le timer qui spawn les obstacles
         if (this.obstacleTimer) {
           this.obstacleTimer.remove(false);
         }
+
+        //Arret du sol, utiliser pour le gameOver
+        this.isRunning = false;
 
         //Arret des timer ou interactions si nécessaire
         this.time.delayedCall(1000, () => {
@@ -121,6 +123,26 @@ export default class GameScene extends Phaser.Scene {
         });
       }
     });
+
+    //Afficher l'image score sur mon canvas
+    this.scoreIcon = this.add
+      .image(16, 16, "coins")
+      .setOrigin(0, 0)
+      .setScale(0.08); //0.08 car 0.05 est trop petit sa fait 41px*41px idéale pour mon canvas
+
+    //Ajouter un score
+    this.score = 0;
+    this.scoreText = this.add.text(
+      16 + this.scoreIcon.displayWidth + 8,
+      20,
+      "0",
+      {
+        fontSize: "24px",
+        fill: "#FFD700",
+        strokeThickness: 3,
+        fontFamily: "Verdana",
+      }
+    );
   }
 
   spawnObstacleWithPlateforme() {
@@ -172,6 +194,13 @@ export default class GameScene extends Phaser.Scene {
 
     // Nettoyage des obstacles et plateformes hors écran à gauche
     this.obstaclesGroup.getChildren().forEach((obstacle) => {
+      //Vérifie si obstacle est passer
+      if (!obstacle.scored && obstacle.x + obstacle.width < this.player.x) {
+        this.score++;
+        this.scoreText.setText(this.score); //Mis à jour du score
+        obstacle.scored = true; //Marque l'obstacle comme passé
+      }
+
       if (obstacle.x < -obstacle.width) {
         obstacle.destroy();
       }

@@ -22,6 +22,8 @@ export default class PreloadScene extends Phaser.Scene {
       frameHeight: 58,
     });
 
+    this.load.image("coins", "../../assets/score.png");
+
     //On stocke nos différents obstacle dans un tableau pour mieux travailler avec
     this.obstacles = [
       { key: "vertical", path: "../../assets/vertical.png" },

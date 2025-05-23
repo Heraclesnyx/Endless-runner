@@ -23,7 +23,7 @@ export default class GameOverScene extends Phaser.Scene {
         "Appuyer sur ESPACE pour rejouer",
         {
           fontSize: "24px",
-          fill: "#ffffff",
+          fill: "#003366",
           fontFamily: "Verdana",
         }
       )
