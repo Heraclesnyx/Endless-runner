@@ -7,6 +7,10 @@ export default class GameScene extends Phaser.Scene {
     super("GameScene");
   }
 
+  init(data) {
+    this.obstacleKeys = data.obstacleKeys || [];
+  }
+
   create() {
     this.add.image(400, 300, "paysage");
 
@@ -76,12 +80,48 @@ export default class GameScene extends Phaser.Scene {
     });
 
     this.isRunning = false;
+
+    //Groupe pour obstacles et plateforme
+    this.obstaclesGroup = this.physics.add.group();
+
+    //Collision entre joueur et obstacles
+    this.physics.add.collider(this.player, this.obstaclesGroup, () => {
+      this.scene.restart();
+    });
+  }
+
+  spawnObstacleWithPlateforme() {
+    //Choisir un obstacle aléatoire
+    const key = Phaser.Utils.Array.GetRandom(this.obstacleKeys);
+
+    //Position de départ
+    const startX = 800;
+
+    const obstacle = this.obstaclesGroup
+      .create(startX, 540, key)
+      .setOrigin(0.5, 1);
+    obstacle.setVelocityX(-200);
+    obstacle.body.immovable = true;
+    obstacle.body.allowGravity = false;
   }
 
   update() {
     if (this.cursors.right.isDown && !this.isRunning) {
       this.isRunning = true;
       this.player.anims.play("run", true);
+
+      //Lance le Timer dès que le jeu est lancer et pas avant
+      if (!this.obstacleTimerStarted) {
+        this.obstacleTimerStarted = true;
+
+        //Timer pour apparition des obstacles
+        this.time.addEvent({
+          delay: 3000,
+          callback: this.spawnObstacleWithPlateforme,
+          callbackScope: this,
+          loop: true,
+        });
+      }
     }
 
     if (
@@ -89,12 +129,19 @@ export default class GameScene extends Phaser.Scene {
       Phaser.Input.Keyboard.JustDown(this.spaceKey) &&
       this.player.body.blocked.down
     ) {
-      this.player.setVelocityY(-300);
+      this.player.setVelocityY(-450);
       this.player.anims.play("jump", true);
     }
 
     if (this.isRunning) {
       this.ground.tilePositionX += 3;
     }
+
+    // Nettoyage des obstacles et plateformes hors écran à gauche
+    this.obstaclesGroup.getChildren().forEach((obstacle) => {
+      if (obstacle.x < -obstacle.width) {
+        obstacle.destroy();
+      }
+    });
   }
 }

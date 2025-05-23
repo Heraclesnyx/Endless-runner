@@ -23,18 +23,19 @@ export default class PreloadScene extends Phaser.Scene {
     });
 
     //On stocke nos différents obstacle dans un tableau pour mieux travailler avec
-    const obstacles = [
+    this.obstacles = [
       { key: "vertical", path: "../../assets/vertical.png" },
       { key: "horizontal", path: "../../assets/vertical2.png" },
-      { key: "platform", path: "../../assets/platform.png" },
     ];
 
-    obstacles.forEach((obstacle) => {
-      this.load.image(obstacle.key, obstacle.path);
+    //Chargement des éléments obstacle et plateforme
+    [...this.obstacles].forEach((item) => {
+      this.load.image(item.key, item.path);
     });
   }
 
   create() {
-    this.scene.start("GameScene");
+    const obstacleKeys = this.obstacles.map((o) => o.key); //Extraction des clés de this.obstacles du preload
+    this.scene.start("GameScene", { obstacleKeys });
   }
 }
