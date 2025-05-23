@@ -54,6 +54,14 @@ export default class GameScene extends Phaser.Scene {
       repeat: 0, //On ne boucle pas un saut
     });
 
+    //Animation dead
+    this.anims.create({
+      key: "dead",
+      frames: this.anims.generateFrameNumbers("mort", { start: 0, end: 9 }),
+      frameRate: 10,
+      repeat: 0, //On ne boucle pas pour une mort
+    });
+
     // Activer la collision entre le joueur et mon sol
     this.physics.add.collider(this.player, this.groundCollider);
 
@@ -86,7 +94,32 @@ export default class GameScene extends Phaser.Scene {
 
     //Collision entre joueur et obstacles
     this.physics.add.collider(this.player, this.obstaclesGroup, () => {
-      this.scene.restart();
+      if (!this.player.isDead) {
+        this.player.isDead = true; //Eviter trop d'appel
+
+        this.player.anims.play("dead", true);
+        this.player.setVelocity(0); //Stop le mouvement
+
+        //Arrêt de tous les obstacles
+        this.obstaclesGroup.getChildren().forEach((obstacle) => {
+          obstacle.setVelocity(0);
+        });
+
+        //Arrêt du sol
+        this.ground.tilePositionX = this.ground.tilePositionX; //On fixe la position
+        this.obstacleTimerStarted = false; // Pour éviter le spawn
+
+        //Stopper le timer qui spawn les obstacles
+        if (this.obstacleTimer) {
+          this.obstacleTimer.remove(false);
+        }
+
+        //Arret des timer ou interactions si nécessaire
+        this.time.delayedCall(1000, () => {
+          this.scene.pause();
+          this.scene.launch("GameOverScene"); //Pour lancer mon game over
+        });
+      }
     });
   }
 
@@ -115,7 +148,7 @@ export default class GameScene extends Phaser.Scene {
         this.obstacleTimerStarted = true;
 
         //Timer pour apparition des obstacles
-        this.time.addEvent({
+        this.obstacleTimer = this.time.addEvent({
           delay: 3000,
           callback: this.spawnObstacleWithPlateforme,
           callbackScope: this,
