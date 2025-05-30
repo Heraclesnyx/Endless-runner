@@ -54,6 +54,14 @@ export default class GameScene extends Phaser.Scene {
       repeat: 0, //On ne boucle pas un saut
     });
 
+    //Animation slide
+    this.anims.create({
+      key: "slide",
+      frames: this.anims.generateFrameNumbers("glisser", { start: 0, end: 9 }),
+      frameRate: 10,
+      repeat: 0, //On ne boucle pas sur une glissade
+    });
+
     //Animation dead
     this.anims.create({
       key: "dead",
@@ -70,13 +78,28 @@ export default class GameScene extends Phaser.Scene {
     this.spaceKey = this.input.keyboard.addKey(
       Phaser.Input.Keyboard.KeyCodes.SPACE
     );
+    this.downKey = this.input.keyboard.addKey(
+      Phaser.Input.Keyboard.KeyCodes.DOWN
+    );
 
-    // Événement : quand une animation démarre, adapter la scale selon run ou jump
+    //Événement : quand une animation démarre, adapter la scale selon run ou jump
+    // this.player.on("animationstart", (animation) => {
+    //   if (animation.key === "jump") {
+    //     this.player.setScale(this.jumpScale);
+    //   } else if (animation.key === "run") {
+    //     this.player.setScale(this.runScale);
+    //   }
+    // });
     this.player.on("animationstart", (animation) => {
-      if (animation.key === "jump") {
-        this.player.setScale(this.jumpScale);
-      } else if (animation.key === "run") {
-        this.player.setScale(this.runScale);
+      switch (animation.key) {
+        case "jump":
+          this.player.setScale(this.jumpScale);
+          break;
+        case "run":
+          this.player.setScale(this.runScale);
+          break;
+        case "dead":
+          this.player.setScale(1);
       }
     });
 
@@ -143,21 +166,33 @@ export default class GameScene extends Phaser.Scene {
         fontFamily: "Verdana",
       }
     );
+
+    //Suivi du type du dernier obstacle passé pour le combo et compteur combo
+    this.lastObstacleType = null;
+    this.comboCount = 1;
   }
 
   spawnObstacleWithPlateforme() {
+    const isVertical = Math.random() < 0.5;
     //Choisir un obstacle aléatoire
-    const key = Phaser.Utils.Array.GetRandom(this.obstacleKeys);
+    const key = isVertical ? "vertical" : "horizontal";
 
-    //Position de départ
-    const startX = 800;
-
+    //Création obstacle à droite de l'écran (x = 800)
+    //Position verticale ajusté en fonction du type d'obstacle
+    // vertical: légèrement plus bas (535)
+    // horizontal: aligné avec le sol
     const obstacle = this.obstaclesGroup
-      .create(startX, 540, key)
+      .create(800, isVertical ? 535 : 540, key)
       .setOrigin(0.5, 1);
+
     obstacle.setVelocityX(-200);
     obstacle.body.immovable = true;
     obstacle.body.allowGravity = false;
+
+    //Type d'obstacle
+    obstacle.type = isVertical ? "vertical" : "horizontal";
+
+    // const obstacle = this.
   }
 
   update() {
@@ -189,16 +224,37 @@ export default class GameScene extends Phaser.Scene {
     }
 
     if (this.isRunning) {
-      this.ground.tilePositionX += 3;
+      this.ground.tilePositionX += 2;
     }
 
     // Nettoyage des obstacles et plateformes hors écran à gauche
     this.obstaclesGroup.getChildren().forEach((obstacle) => {
       //Vérifie si obstacle est passer
       if (!obstacle.scored && obstacle.x + obstacle.width < this.player.x) {
-        this.score++;
-        this.scoreText.setText(this.score); //Mis à jour du score
-        obstacle.scored = true; //Marque l'obstacle comme passé
+        //Check type obstacle
+        const currentType = obstacle.type || "horizontal";
+
+        //Application d'un score de base
+        const baseScore = currentType === "vertical" ? 2 : 1;
+
+        //Gestion combo
+        if (this.lastObstacleType === currentType) {
+          this.comboCount++;
+        } else {
+          this.comboCount = 1;
+        }
+
+        //Mémorise le dernier obstacle
+        this.lastObstacleType = currentType;
+
+        //Calcul du score avec combo
+        const pointToAdd = baseScore * this.comboCount;
+        this.score += pointToAdd;
+
+        //Mise à jour du score
+        this.scoreText.setText(this.score);
+
+        obstacle.scored = true;
       }
 
       if (obstacle.x < -obstacle.width) {
