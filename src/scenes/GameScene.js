@@ -170,10 +170,54 @@ export default class GameScene extends Phaser.Scene {
     //Suivi du type du dernier obstacle passé pour le combo et compteur combo
     this.lastObstacleType = null;
     this.comboCount = 1;
+
+    //Vitesse de base sol et obstacles
+    this.groundSpeed = 3;
+    this.obstacleSpeed = -200;
+
+    //Variable temps pour le début accélération
+    this.startTime = this.time.now;
+
+    //Gestion de la distance mini entre obstacle
+    this.lastObstacleTime = 0;
+    this.minObstacleDelay = 2000;
+  }
+
+  adjustDifficulty() {
+    //Réduction progressive du délai (limite de base = 800 ms)
+    const reductionStep = 50;
+    const minLimit = 800;
+
+    if (this.minObstacleDelay > minLimit) {
+      this.minObstacleDelay -= reductionStep;
+    }
+
+    //Adaptation vitesse sol / obstacle selon le score
+    if (this.score >= 20 && this.groundSpeed < 4) {
+      this.groundSpeed = 4;
+      this.obstacleSpeed = -250;
+    }
+
+    if (this.score >= 50 && this.groundSpeed < 6) {
+      this.groundSpeed = 6;
+      this.obstacleSpeed = -300;
+    }
+
+    if (this.score >= 100 && this.groundSpeed < 8) {
+      this.groundSpeed = 8;
+      this.obstacleSpeed = -350;
+    }
   }
 
   spawnObstacleWithPlateforme() {
     const isVertical = Math.random() < 0.5;
+
+    const now = this.time.now;
+
+    //Stop si délai trop court entre 2 obstacles
+    if (now - this.lastObstacleTime < this.minObstacleDelay) {
+      return;
+    }
     //Choisir un obstacle aléatoire
     const key = isVertical ? "vertical" : "horizontal";
 
@@ -185,14 +229,18 @@ export default class GameScene extends Phaser.Scene {
       .create(800, isVertical ? 535 : 540, key)
       .setOrigin(0.5, 1);
 
-    obstacle.setVelocityX(-200);
+    obstacle.setVelocityX(this.obstacleSpeed);
     obstacle.body.immovable = true;
     obstacle.body.allowGravity = false;
 
     //Type d'obstacle
     obstacle.type = isVertical ? "vertical" : "horizontal";
 
-    // const obstacle = this.
+    //Mise à jour du dernier moment de spawn
+    this.lastObstacleTime = now;
+
+    //Mise à jour de la difficulté
+    this.adjustDifficulty();
   }
 
   update() {
@@ -224,7 +272,22 @@ export default class GameScene extends Phaser.Scene {
     }
 
     if (this.isRunning) {
-      this.ground.tilePositionX += 2;
+      this.ground.tilePositionX += this.groundSpeed;
+
+      //Accélération en fonction du temps
+      const elapsedTime = this.time.now - this.startTime;
+
+      if (elapsedTime > 10000) {
+        this.groundSpeed = 4;
+        this.obstacleSpeed = -250;
+        this.minObstacleDelay = 1500;
+      }
+
+      if (elapsedTime > 20000) {
+        this.groundSpeed = 6;
+        this.obstacleSpeed = -300;
+        this.minObstacleDelay = 1200;
+      }
     }
 
     // Nettoyage des obstacles et plateformes hors écran à gauche
