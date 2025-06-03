@@ -28,7 +28,7 @@ export default class GameScene extends Phaser.Scene {
       .refreshBody()
       .setVisible(false); // Cache la hitbox
 
-    // Échelles pour run et jump
+    // Échelles pour run, jump et slide
     this.runScale = 1; // taille normale pour la course (déjà ok)
     this.jumpScale = Math.ceil((59 / 120) * 100) / 100; // ≈ 0.49 pour la hauteur du saut
     this.slideScale = Math.ceil((59 / 95) * 100) / 100;
@@ -84,21 +84,15 @@ export default class GameScene extends Phaser.Scene {
       Phaser.Input.Keyboard.KeyCodes.DOWN
     );
 
-    //Événement : quand une animation démarre, adapter la scale selon run ou jump
-    // this.player.on("animationstart", (animation) => {
-    //   if (animation.key === "jump") {
-    //     this.player.setScale(this.jumpScale);
-    //   } else if (animation.key === "run") {
-    //     this.player.setScale(this.runScale);
-    //   }
-    // });
-
+    //Définit la taille du corps physique (hitbox) du joueur aux dimensions complète de mon sprite(largeur et hauteur d'origine)
     this.player.body.setSize(this.player.width, this.player.height);
 
+    //Événement : quand une animation démarre, adapter la scale selon run ou jump
     this.player.on("animationstart", (animation) => {
       switch (animation.key) {
         case "jump":
           this.player.setScale(this.jumpScale);
+          //On modifie la hitbox (corps physique) du joueur pour correspondre à la nouvelle taille lors du saut
           this.player.body.setSize(
             this.player.width * this.jumpScale,
             this.player.height * this.jumpScale
@@ -115,6 +109,11 @@ export default class GameScene extends Phaser.Scene {
           break;
         case "slide":
           this.player.setScale(this.slideScale);
+
+          //Modifier la taille et la position du body
+          //On réduit la hauteur du corp pour correspondre à l'animation de glissade
+          //On déplace la "hitbox" vers le bas avec setOffset pour aligner correctement
+          //Le corps physique avec la nouvelle position du joueur pendant la glissade
           this.player.body.setSize(
             this.player.width,
             this.player.height * this.slideScale
@@ -127,7 +126,7 @@ export default class GameScene extends Phaser.Scene {
       }
     });
 
-    // Événement : quand animation jump finit, repasser en run si nécessaire
+    // Événement : quand animation jump/slide finit, repasser en run si nécessaire
     this.player.on("animationcomplete", (animation) => {
       if (animation.key === "jump" && this.isRunning) {
         this.player.anims.play("run", true);
@@ -248,14 +247,31 @@ export default class GameScene extends Phaser.Scene {
       return;
     }
     //Choisir un obstacle aléatoire
-    const key = isVertical ? "vertical" : "horizontal";
+    // const key = isVertical ? "vertical" : "horizontal";
+    let key = "vertical";
+    let posY = 540;
+    let type = "horizontal";
+
+    if (isVertical) {
+      const slideOrJump = Math.random() < 0.5 ? "jump" : "slide";
+
+      if (slideOrJump === "jump") {
+        key = "horizontal";
+        posY = 540;
+        type = "horizontal_jump";
+      } else {
+        key = "vertical";
+        posY = 480;
+        type = "vertical_slide";
+      }
+    }
 
     //Création obstacle à droite de l'écran (x = 800)
     //Position verticale ajusté en fonction du type d'obstacle
     // vertical: légèrement plus bas (535)
     // horizontal: aligné avec le sol
     const obstacle = this.obstaclesGroup
-      .create(800, isVertical ? 535 : 540, key)
+      .create(800, posY, key)
       .setOrigin(0.5, 1);
 
     obstacle.setVelocityX(this.obstacleSpeed);
@@ -291,6 +307,7 @@ export default class GameScene extends Phaser.Scene {
       }
     }
 
+    //Partie saut quand on appuye sur la barre espace
     if (
       this.isRunning &&
       Phaser.Input.Keyboard.JustDown(this.spaceKey) &&
@@ -300,6 +317,7 @@ export default class GameScene extends Phaser.Scene {
       this.player.anims.play("jump", true);
     }
 
+    //Partie slide quand on appuye sur la fleche bas
     if (
       this.isRunning &&
       Phaser.Input.Keyboard.JustDown(this.downKey) &&
@@ -309,6 +327,7 @@ export default class GameScene extends Phaser.Scene {
       this.player.anims.play("slide", true);
     }
 
+    //Défilement du sol
     if (this.isRunning) {
       this.ground.tilePositionX += this.groundSpeed;
 
@@ -335,8 +354,8 @@ export default class GameScene extends Phaser.Scene {
         //Check type obstacle
         const currentType = obstacle.type || "horizontal";
 
-        //Application d'un score de base
-        const baseScore = currentType === "vertical" ? 2 : 1;
+        //Application d'un score de base : 2 pour un vertical et 1 pour un horizontal
+        const baseScore = currentType.includes("vertical") ? 2 : 1;
 
         //Gestion combo
         if (this.lastObstacleType === currentType) {
