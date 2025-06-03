@@ -31,9 +31,11 @@ export default class GameScene extends Phaser.Scene {
     // Échelles pour run et jump
     this.runScale = 1; // taille normale pour la course (déjà ok)
     this.jumpScale = Math.ceil((59 / 120) * 100) / 100; // ≈ 0.49 pour la hauteur du saut
+    this.slideScale = Math.ceil((59 / 95) * 100) / 100;
 
     //Création de mon joueur
     this.player = this.physics.add.sprite(100, 500, "ninja");
+    this.player.setOrigin(0.5, 1);
     this.player.setScale(this.runScale); //Fixer  la taille du joueur
     this.player.setBounce(0.2);
     this.player.setCollideWorldBounds(true).setDepth(1); //Perso devant le sol
@@ -58,7 +60,7 @@ export default class GameScene extends Phaser.Scene {
     this.anims.create({
       key: "slide",
       frames: this.anims.generateFrameNumbers("glisser", { start: 0, end: 9 }),
-      frameRate: 10,
+      frameRate: 15,
       repeat: 0, //On ne boucle pas sur une glissade
     });
 
@@ -90,22 +92,49 @@ export default class GameScene extends Phaser.Scene {
     //     this.player.setScale(this.runScale);
     //   }
     // });
+
+    this.player.body.setSize(this.player.width, this.player.height);
+
     this.player.on("animationstart", (animation) => {
       switch (animation.key) {
         case "jump":
           this.player.setScale(this.jumpScale);
+          this.player.body.setSize(
+            this.player.width * this.jumpScale,
+            this.player.height * this.jumpScale
+          );
           break;
         case "run":
           this.player.setScale(this.runScale);
+          this.player.body.setSize(this.player.width, this.player.height);
           break;
         case "dead":
           this.player.setScale(1);
+          this.player.body.setSize(this.player.width, this.player.height);
+
+          break;
+        case "slide":
+          this.player.setScale(this.slideScale);
+          this.player.body.setSize(
+            this.player.width,
+            this.player.height * this.slideScale
+          );
+          this.player.body.setOffset(
+            0,
+            this.player.height * (1 - this.slideScale)
+          );
+          break;
       }
     });
 
     // Événement : quand animation jump finit, repasser en run si nécessaire
     this.player.on("animationcomplete", (animation) => {
       if (animation.key === "jump" && this.isRunning) {
+        this.player.anims.play("run", true);
+      } else if (animation.key === "slide" && this.isRunning) {
+        this.player.setScale(this.runScale); //Revenir à la course
+        this.player.body.setSize(this.player.width, this.player.height);
+        this.player.body.setOffset(0, 0);
         this.player.anims.play("run", true);
       }
     });
@@ -269,6 +298,15 @@ export default class GameScene extends Phaser.Scene {
     ) {
       this.player.setVelocityY(-450);
       this.player.anims.play("jump", true);
+    }
+
+    if (
+      this.isRunning &&
+      Phaser.Input.Keyboard.JustDown(this.downKey) &&
+      this.player.body.blocked.down &&
+      this.player.anims.currentAnim.key !== "slide"
+    ) {
+      this.player.anims.play("slide", true);
     }
 
     if (this.isRunning) {

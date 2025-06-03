@@ -18,8 +18,8 @@ export default class PreloadScene extends Phaser.Scene {
       frameHeight: 120,
     });
     this.load.spritesheet("glisser", "../../assets/glisse.png", {
-      frameWidth: 1438,
-      frameHeight: 1388,
+      frameWidth: 102,
+      frameHeight: 95,
     });
     this.load.spritesheet("mort", "../../assets/dead.png", {
       frameWidth: 56,
