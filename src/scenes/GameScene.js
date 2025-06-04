@@ -209,6 +209,13 @@ export default class GameScene extends Phaser.Scene {
     //Gestion de la distance mini entre obstacle
     this.lastObstacleTime = 0;
     this.minObstacleDelay = 2000;
+
+    //Map des points par type d'obstacle
+    this.scoreMap = {
+      horizontal: 1,
+      vertical: 2,
+      vertical_slide: 2, //Même score que vertical
+    };
   }
 
   adjustDifficulty() {
@@ -247,23 +254,32 @@ export default class GameScene extends Phaser.Scene {
       return;
     }
     //Choisir un obstacle aléatoire
-    // const key = isVertical ? "vertical" : "horizontal";
-    let key = "vertical";
-    let posY = 540;
-    let type = "horizontal";
+    let key, posY, type;
 
     if (isVertical) {
-      const slideOrJump = Math.random() < 0.5 ? "jump" : "slide";
+      const verticalType = Math.random();
 
-      if (slideOrJump === "jump") {
-        key = "horizontal";
-        posY = 540;
-        type = "horizontal_jump";
-      } else {
+      if (verticalType < 0.5) {
         key = "vertical";
-        posY = 480;
-        type = "vertical_slide";
+        posY = 540;
+        type = "vertical";
+      } else {
+        const slideOrJump = Math.random() < 0.5 ? "jump" : "slide";
+        if (slideOrJump === "jump") {
+          key = "vertical";
+          posY = 540;
+          type = "vertical";
+        } else {
+          key = "vertical";
+          posY = 480;
+          type = "vertical_slide";
+        }
       }
+    } else {
+      //obstacle horizontal normale
+      key = "horizontal";
+      posY = 540;
+      type = "horizontal";
     }
 
     //Création obstacle à droite de l'écran (x = 800)
@@ -278,8 +294,9 @@ export default class GameScene extends Phaser.Scene {
     obstacle.body.immovable = true;
     obstacle.body.allowGravity = false;
 
-    //Type d'obstacle
-    obstacle.type = isVertical ? "vertical" : "horizontal";
+    //Type d'obstacle par type d'obstacle
+    obstacle.type = type;
+    // obstacle.type = isVertical ? "vertical" : "horizontal";
 
     //Mise à jour du dernier moment de spawn
     this.lastObstacleTime = now;
@@ -354,10 +371,24 @@ export default class GameScene extends Phaser.Scene {
         //Check type obstacle
         const currentType = obstacle.type || "horizontal";
 
-        //Application d'un score de base : 2 pour un vertical et 1 pour un horizontal
-        const baseScore = currentType.includes("vertical") ? 2 : 1;
+        //Récupérer les points en fonction du type d'obstacles
+        //Horizontale = 1 point
+        //Verticale et verical_slide = 2 points
+        //Défaut = 1 point
+        let baseScore;
 
-        //Gestion combo
+        if (currentType === "horizontal") {
+          baseScore = 1;
+        } else if (
+          currentType === "vertical" ||
+          currentType === "vertical_slide"
+        ) {
+          baseScore = 2;
+        } else {
+          baseScore = 1;
+        }
+
+        //Gestion combo && this.lastObstacleType
         if (this.lastObstacleType === currentType) {
           this.comboCount++;
         } else {
@@ -368,12 +399,17 @@ export default class GameScene extends Phaser.Scene {
         this.lastObstacleType = currentType;
 
         //Calcul du score avec combo
-        const pointToAdd = baseScore * this.comboCount;
-        this.score += pointToAdd;
+        // const pointToAdd = baseScore;
+        const totalToAdd = baseScore * this.comboCount;
+
+        this.score += totalToAdd;
 
         //Mise à jour du score
         this.scoreText.setText(this.score);
 
+        // this.comboText.setText(this.comboCount);
+        //Mise à jour mémoire
+        // this.lastObstacleType = currentType;
         obstacle.scored = true;
       }
 
