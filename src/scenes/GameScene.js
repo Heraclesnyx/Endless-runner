@@ -200,7 +200,7 @@ export default class GameScene extends Phaser.Scene {
     this.comboCount = 1;
 
     //Vitesse de base sol et obstacles
-    this.groundSpeed = 3;
+    this.groundSpeed = 1;
     this.obstacleSpeed = -200;
 
     //Variable temps pour le début accélération
